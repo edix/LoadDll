@@ -20,3 +20,8 @@ Load a DLL in LoadDLL and go on!
 
 Source is made for Visual Studio 2010 and uses Length Disassembly Engine (LDE) by BeatriX. I made this tool in 2011.
 
+Screenshots
+===========
+![Screenshot of LoadDll with executed user32.dll!MessageBoxW](screenshot1.jpg)
+
+![Screenshot of loading TestDLL in LoadDLL. First argument is a string (filepath) and second one is a DWORD (number of bytes)](screenshot2.jpg)
