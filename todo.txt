@@ -1,0 +1,7 @@
+* HowieCameUnglued: Does it demangle C++ function names? Also for decorated and COM DLLs, it might be possible to display the parameter names which would be quite useful
+* maybe an online API lookup? Like if you select an exported DLL function (e.g: MessageBoxA) it will query online for the parameters and parse them... or maybe instead of online lookup I can use PDB parsing?
+* 
+
+
+
+
