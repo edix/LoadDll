@@ -142,7 +142,7 @@ BOOL CLoadDllDlg::OnInitDialog()
 	//
 	// Align column width
 	//
-	for( int x = 0; x < 3; x++ ) lstExports.SetColumnWidth( x, LVSCW_AUTOSIZE_USEHEADER );
+	for( int x = 0; x < 4; x++ ) lstExports.SetColumnWidth( x, LVSCW_AUTOSIZE_USEHEADER );
 
 
 	//Set up the tooltip
