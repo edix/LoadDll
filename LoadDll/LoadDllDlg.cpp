@@ -3,6 +3,7 @@
 #include "LoadDllDlg.h"
 #include "afxdialogex.h"
 #include "disasm/LDE64.h"
+#include "MemoryModule.h"
 
 
 //
@@ -142,6 +143,26 @@ BOOL CLoadDllDlg::OnInitDialog()
 	// Align column width
 	//
 	for( int x = 0; x < 3; x++ ) lstExports.SetColumnWidth( x, LVSCW_AUTOSIZE_USEHEADER );
+
+
+	//Set up the tooltip
+	m_pToolTip = new CToolTipCtrl;
+	if(!m_pToolTip->Create(this))
+	{
+		return TRUE;
+	}
+
+	m_pToolTip->SetMaxTipWidth(500);
+	m_pToolTip->AddTool(this, "LoadDLL by Esmid Idrizovic");
+	m_pToolTip->AddTool(&m_chkPause,"This will call an INT 3 right before the DLL is loaded or the function executed, so don't worry if it looks like LoadDLL has crashed. You can attach with your debugger to LoadDLL and move on with your analysis.");
+	m_pToolTip->AddTool(&rbCallEntrypoint, "This will load the DLL directly into memory with a custom LoadLibrary function and will execute all TLS entries and then the DllMain.");
+	m_pToolTip->AddTool(&rbExportedFunction, "This will load the DLL using LoadLibrary and will execute the selected function.");
+	m_pToolTip->AddTool(&btnLoadFile, "Select your DLL file...");
+	m_pToolTip->AddTool(&cbCallingConvention, "You must select the right calling convention of the function.\n\nStdcall: function is going to clean up the stack.\nFastcall: ECX+EDX, rest on stack and function is going to clean up.\nCdecl: you have to clean up the stack.\nThiscall: this-pointer is in ECX, function is going to clean up the stack.");
+	m_pToolTip->AddTool(&cbNumberOfArgs, "You can always change the number of the arguments if it's wrong detected by LoadDLL.");
+
+	m_pToolTip->Activate(TRUE);
+
 
 	return TRUE;
 }
@@ -562,29 +583,62 @@ BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE p
 	return TRUE;
 }
 
+BOOL LoadFileInMemory(const char* szFileName, LPBYTE &pBuffer, DWORD &dwSize)
+{
+	HANDLE hFile;
+	DWORD dwBytesRead, dwFileSize;
+	BOOL fResult = FALSE;
+
+	hFile = CreateFileA( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+	if ( hFile == INVALID_HANDLE_VALUE )
+	{
+		return fResult;
+	}
+
+	dwFileSize = GetFileSize( hFile, NULL );
+	if ( dwFileSize == 0 || dwFileSize == INVALID_FILE_SIZE )
+		goto lblAbort;
+
+	pBuffer = new BYTE[ dwFileSize ];
+
+	if ( ReadFile(hFile, pBuffer, dwFileSize, &dwBytesRead, NULL) == FALSE || dwBytesRead != dwFileSize )
+		goto lblAbort;
+
+	fResult = TRUE;
+	dwSize = dwFileSize;
+
+lblAbort:
+	CloseHandle(hFile);
+	return fResult;
+}
+
+
 //
 // Load DLL and execute main entry point.
 //
 BOOL CLoadDllDlg::LoadDll( )
 {
-	HMODULE hDLL = NULL;
+	HMEMORYMODULE hDLL;
 	char szError[ 0x100 ] = { 0 };
 	char szFileName[MAX_PATH +1] = { 0 };
 	BOOL fResult = FALSE;
+	LPBYTE pBuffer = NULL;
+	DWORD dwSize = 0;
 
 	//
 	// Load DLL and execute main entry point.
 	//
 	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
 
-	if ( m_chkPause.GetCheck() )
+	//
+	// do a pause before executed DLL
+	//
+	if (!LoadFileInMemory(szFileName, pBuffer, dwSize))
 	{
-		//
-		// TODO: do a pause before executed DLL
-		//
+		goto lblAbort;
 	}
 
-	hDLL = LoadLibraryA( szFileName );
+	hDLL = MemoryLoadLibrary(pBuffer, m_chkPause.GetCheck() ? TRUE : FALSE);
 	if ( hDLL == NULL )
 	{
 		wsprintfA( szError, "Can't load DLL \"%s\". Error = %d\n", szFileName, GetLastError() );
@@ -592,27 +646,17 @@ BOOL CLoadDllDlg::LoadDll( )
 		goto lblAbort;
 	}
 
-	//
-	// TODO: call DllMain
-	//
-	//	  void CALLBACK
-	// EntryPoint(HWND hwnd, HINSTANCE hinst, LPSTR lpszCmdLine, int nCmdShow);
-	//
 	this->MessageBox( "DLL loaded. Press OK to unload.", NULL, MB_ICONINFORMATION );
 
 lblAbort:
 	if ( hDLL != NULL )
 	{
-		if ( FreeLibrary(hDLL) == FALSE )
-		{
-			wsprintfA( szError, "Can't unload DLL. Error = %d\n", GetLastError() );
-			this->MessageBox( szError, "Error", MB_ICONERROR );
-		}
-		else	
-		{
-			fResult = TRUE;
-		}
+		MemoryFreeLibrary(hDLL);
+		fResult = TRUE;
 	}
+	delete[] pBuffer;
+	pBuffer = NULL;
+
 	return fResult;
 }
 
@@ -638,7 +682,7 @@ BOOL CLoadDllDlg::LoadDllAndExecuteFunction()
 	PVOID pFunction = NULL;
 
 	//
-	// Load DLL.
+	// Load DLL
 	//
 	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
 	hDLL = LoadLibraryA( szFileName );
@@ -764,6 +808,13 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		ProcNoArgCdeclcall	pFunctionCdeclcall = (ProcNoArgCdeclcall)pFunction;
 		ProcNoArgThiscall	pFunctionThiscall = (ProcNoArgThiscall)pFunction;
 
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
 		__try 
 		{
 			switch (nCallingConvention)
@@ -796,6 +847,14 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		Proc1ArgFastcall	pFunctionFastcall =  (Proc1ArgFastcall)pFunction;
 		Proc1ArgCdeclcall	pFunctionCdeclcall = (Proc1ArgCdeclcall)pFunction;
 		Proc1ArgThiscall	pFunctionThiscall =  (Proc1ArgThiscall)pFunction;
+
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
 
 		__try 
 		{
@@ -830,6 +889,14 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		Proc2ArgCdeclcall	pFunctionCdeclcall = (Proc2ArgCdeclcall)pFunction;
 		Proc2ArgThiscall	pFunctionThiscall =  (Proc2ArgThiscall)pFunction;
 
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
+
 		__try 
 		{
 			switch (nCallingConvention)
@@ -862,6 +929,14 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		Proc3ArgFastcall	pFunctionFastcall =  (Proc3ArgFastcall)pFunction;
 		Proc3ArgCdeclcall	pFunctionCdeclcall = (Proc3ArgCdeclcall)pFunction;
 		Proc3ArgThiscall	pFunctionThiscall =  (Proc3ArgThiscall)pFunction;
+
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
 
 		__try 
 		{
@@ -896,6 +971,14 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		Proc4ArgCdeclcall	pFunctionCdeclcall = (Proc4ArgCdeclcall)pFunction;
 		Proc4ArgThiscall	pFunctionThiscall =  (Proc4ArgThiscall)pFunction;
 
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
+
 		__try 
 		{
 			switch (nCallingConvention)
@@ -928,6 +1011,14 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 		Proc5ArgFastcall	pFunctionFastcall =  (Proc5ArgFastcall)pFunction;
 		Proc5ArgCdeclcall	pFunctionCdeclcall = (Proc5ArgCdeclcall)pFunction;
 		Proc5ArgThiscall	pFunctionThiscall =  (Proc5ArgThiscall)pFunction;
+
+		//
+		// call an INT3 if pause is checked
+		//
+		if ( m_chkPause.GetCheck() ) 
+		{
+			__debugbreak();
+		}
 
 		__try 
 		{
@@ -1251,8 +1342,9 @@ lblAbort:
 //
 void CLoadDllDlg::OnBnClickedHelp()
 {
-	char * szText = "LoadDLL by Esmid Idrizovic, 26. October 2011\n\n"
-					"Uses Length Disassembler Engine by BeatriX\n\n"
+	char * szText = "LoadDLL by Esmid Idrizovic, 23. Juni 2014\n\n"
+					"Uses Length Disassembler Engine by BeatriX\n"
+					"Uses MemoryModule by Joachim Bauch\n\n"
 					"Arguments:\n"
 					"DWORD: numeric parameter (start with \"0x\" for hex-numbers)\n"
 					"STR: ASCII string as parameter\n"
@@ -1262,4 +1354,14 @@ void CLoadDllDlg::OnBnClickedHelp()
 					"Don't load any suspected DLL on your real system! Use always an virtual machine!\n";
 
 	this->MessageBox( szText, "Help", MB_ICONINFORMATION );
+}
+
+
+BOOL CLoadDllDlg::PreTranslateMessage(MSG* pMsg)
+{
+	// TODO: Add your specialized code here and/or call the base class
+	if (NULL != m_pToolTip)
+		m_pToolTip->RelayEvent(pMsg);
+
+	return CDialogEx::PreTranslateMessage(pMsg);
 }

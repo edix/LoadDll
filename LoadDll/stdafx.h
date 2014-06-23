@@ -36,7 +36,7 @@
 
 #include <afxcontrolbars.h>     // MFC-Unterstützung für Menübänder und Steuerleisten
 
-
+#include "MemoryModule.h"
 
 #ifdef _UNICODE
 #if defined _M_IX86

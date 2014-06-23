@@ -13,6 +13,11 @@ class CLoadDllDlg : public CDialogEx
 // Konstruktion
 public:
 	CLoadDllDlg(CWnd* pParent = NULL);	// Standardkonstruktor
+	~CLoadDllDlg()
+	{
+		delete m_pToolTip;
+		m_pToolTip = NULL;
+	}
 
 // Dialogfelddaten
 	enum { IDD = IDD_LOADDLL_DIALOG };
@@ -75,4 +80,6 @@ public:
 	afx_msg void OnBnClickedHelp();
 	CComboBox cbCallingConvention;
 	CButton m_chkPause;
+	CToolTipCtrl* m_pToolTip;
+	virtual BOOL PreTranslateMessage(MSG* pMsg);
 };
