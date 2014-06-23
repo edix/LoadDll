@@ -81,6 +81,7 @@ void CLoadDllDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CB_ARG4, cbArgType4);
 	DDX_Control(pDX, IDC_CB_ARG5, cbArgType5);
 	DDX_Control(pDX, IDC_CB_CALLINGCONV, cbCallingConvention);
+	DDX_Control(pDX, IDC_PAUSE, m_chkPause);
 }
 
 BEGIN_MESSAGE_MAP(CLoadDllDlg, CDialogEx)
@@ -115,7 +116,8 @@ BOOL CLoadDllDlg::OnInitDialog()
 	lstExports.InsertColumn(0, "ID", LVCFMT_LEFT, 100 );
 	lstExports.InsertColumn(1, "Function Name", LVCFMT_LEFT, 200);
 	lstExports.InsertColumn(2, "Ordinal", LVCFMT_LEFT, 100);
-	lstExports.InsertColumn(3, "Arguments", LVCFMT_LEFT, 100);
+	lstExports.InsertColumn(3, "Arguments", LVCFMT_LEFT, 60);
+	lstExports.InsertColumn(4, "Function type", LVCFMT_LEFT, 200);
 	lstExports.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_ONECLICKACTIVATE);
 
 	//
@@ -298,7 +300,7 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 {
 	int nItem = 0;
 	char szFileName[MAX_PATH +1];
-	char szTemp[ 20 ];
+	char szTemp[ 100 ];
 	char * lpszFunctionName = NULL;
 	UINT16 wOrdinal = 0, wNumberOfArgs = 0;
 
@@ -313,6 +315,7 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 	DWORD* lpszExportNameTable = NULL;
 	WORD* lpExportOrdinalTable = NULL;
 	DWORD* lpExportFunctionTable = NULL;
+	WORD wNumberOfPseudoPushArguments = 0;
 
 	lstExports.DeleteAllItems();
 	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
@@ -402,7 +405,7 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 			// disassemble our function buffer and find out whats the return code
 			//
 			PBYTE pPtr = (PBYTE)((char*)pFile + dwFunctionAddress);
-			wNumberOfArgs = GetArgNumberFromFunction( pPtr );
+			wNumberOfArgs = GetArgNumberFromFunction( pPtr, wNumberOfPseudoPushArguments );
 		}
 
 		//
@@ -417,6 +420,12 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 			lstExports.SetItemText( nItem, 1, lpszFunctionName );
 
 			//
+			// if the function name starts with an @ we assume its a fastcall, so we have to increment the number of arguments to atleast 2 (eax, ecx are used for first two arguments)
+			//
+			if ( lpszFunctionName[0] == '@' && wNumberOfArgs != (UINT16)-1 )
+				wNumberOfArgs += 2;
+
+			//
 			// Add ordinal
 			//
 			wsprintfA( szTemp, "%d", wOrdinal + pExport->Base );
@@ -425,9 +434,36 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 			//
 			// Add number of arguments
 			//
-			wsprintfA( szTemp, "%d", wNumberOfArgs );
+			wsprintfA( szTemp, "%d", wNumberOfArgs != (UINT16)-1 ? wNumberOfArgs : 0 );
 			lstExports.SetItemText( nItem, 3, szTemp );
 
+			//
+			// Add assumed function type, we can just guess the type
+			//
+			if ( wNumberOfArgs == 0 )
+			{
+				if (  wNumberOfPseudoPushArguments == 0 )
+				{
+					lstExports.SetItemText(nItem, 4, "Cdecl");
+				}
+				else
+				{
+					wsprintf( szTemp, "Cdecl but found %u push/mov argument[n] in the function", wNumberOfPseudoPushArguments );
+					lstExports.SetItemText(nItem, 4, szTemp);
+				}
+			}
+			else if ( lpszFunctionName[0] == '@' )
+			{
+				lstExports.SetItemText(nItem, 4, "Fastcall");
+			}
+			else if ( wNumberOfArgs == (UINT16)-1 )
+			{
+				lstExports.SetItemText(nItem, 4, "Exported Variable");
+			}
+			else
+			{
+				lstExports.SetItemText(nItem, 4, "Stdcall");
+			}
 			nItem++;
 		}
 	}
@@ -439,7 +475,7 @@ lblAbort:
 	//
 	// Align column width
 	//
-	for( int x = 0; x < 3; x++ ) lstExports.SetColumnWidth( x, LVSCW_AUTOSIZE_USEHEADER );
+	for( int x = 0; x < 4; x++ ) lstExports.SetColumnWidth( x, LVSCW_AUTOSIZE_USEHEADER );
 
 	return TRUE;
 }
@@ -540,6 +576,14 @@ BOOL CLoadDllDlg::LoadDll( )
 	// Load DLL and execute main entry point.
 	//
 	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
+
+	if ( m_chkPause.GetCheck() )
+	{
+		//
+		// TODO: do a pause before executed DLL
+		//
+	}
+
 	hDLL = LoadLibraryA( szFileName );
 	if ( hDLL == NULL )
 	{
@@ -936,9 +980,14 @@ void CLoadDllDlg::ShowExecutedFunctionInformation( int nReturn, BOOL fException 
 //
 // Disassemble function and get the number of arguments for a function.
 //
-UINT16 CLoadDllDlg::GetArgNumberFromFunction( PBYTE pAddress )
+UINT16 CLoadDllDlg::GetArgNumberFromFunction( PBYTE pAddress, WORD &wNumberOfPseudoPushArguments )
 {
+#ifdef _WIN64
 	DWORD64 dwLength = 0, dwInstructions = 0;
+#else
+	DWORD dwLength = 0, dwInstructions = 0;
+#endif
+
 	int nDisasmType;
 	UINT16 wNumberOfArgs = 0;
 
@@ -947,6 +996,14 @@ UINT16 CLoadDllDlg::GetArgNumberFromFunction( PBYTE pAddress )
 #else
 	nDisasmType = 32;	// disassemble as x32 assembler in Win32 compile
 #endif
+
+	wNumberOfPseudoPushArguments = 0;
+
+	if ( *pAddress == 0x00 )
+	{
+		return (UINT16)-1;
+	}
+
 	while ( TRUE )
 	{
 		//
@@ -965,14 +1022,37 @@ UINT16 CLoadDllDlg::GetArgNumberFromFunction( PBYTE pAddress )
 			wNumberOfArgs /= sizeof(void*);
 			break;
 		}
-		else if ( dwInstructions > 100 )
+		//
+		// push [ebp +]
+		//
+		else if ( *pAddress == 0xFF && *(pAddress + 1) == 0x75 && *(pAddress + 2) >= 0x08 )
+		{
+			// push from stack ... looks like cdecl function but pushing args
+			wNumberOfPseudoPushArguments++;
+		}
+		//
+		// mov ecx, [ebp +]
+		// mov eax, [ebp +]
+		// mov edx, [ebp +]
+		// mov ebx, [ebp +]
+		//
+		else if ( *pAddress == 0x8B && 
+			(*(pAddress +1) == 0x45 || *(pAddress +1) == 0x4d || *(pAddress +1) == 0x55 || *(pAddress+1) == 0x5d) 
+			&& *(pAddress + 2) >= 0x08 )
+		{
+			wNumberOfPseudoPushArguments++;
+		}
+		else if ( dwInstructions > 0x400 || *pAddress == 0x00 )
 		{
 			//
 			// still nothing found? exit
 			//
 			break;
 		}
-
+		else if ( *pAddress == 0xCC )
+		{
+			break;
+		}
 		dwLength = LDE( (DWORD64)pAddress, nDisasmType );
 		if ( dwLength == (DWORD64)-1 )
 			break;
@@ -1003,7 +1083,36 @@ void CLoadDllDlg::OnNMClickListExports(NMHDR *pNMHDR, LRESULT *pResult)
 			if ( _stricmp(szArgs, "0") == 0 )
 				strcpy_s( szArgs, sizeof(szArgs), "None" );
 
+
+
+			char szType[100];
+			if (GetTextFromListView(szType, sizeof(szType), 4))
+			{
+				if (_strnicmp("Stdcall", szType, 7) == 0)
+					cbCallingConvention.SetCurSel(0);
+				else if (_strnicmp("Fastcall", szType, 8) == 0)
+					cbCallingConvention.SetCurSel(1);
+				else if (_strnicmp("Cdecl", szType, 5) == 0)
+				{
+					cbCallingConvention.SetCurSel(2);
+					char* szPos = strstr(szType, "Cdecl but found ");
+					if ( szPos)
+					{
+						szPos += strlen("Cdecl but found ");
+						const char* szTemp = strchr(szPos, ' ');
+						memset(szArgs, 0, sizeof(szArgs));
+						strncpy_s(szArgs, szPos, szTemp - szPos);
+					}
+				}
+				else if ( _strnicmp("Thiscall", szType, 8) == 0 )
+				{
+					cbCallingConvention.SetCurSel(3);
+				}
+			}
+
 			cbNumberOfArgs.SelectString( 0, szArgs );
+
+
 			OnCbnSelchangeCmbNumberofargs();
 		}
 
@@ -1051,7 +1160,8 @@ void CLoadDllDlg::OnBnClickedLoadfile()
 
 		rbExportedFunction.EnableWindow( fValidDLL );
 		rbCallEntrypoint.EnableWindow( fValidDLL );
-		lstExports.EnableWindow( fValidDLL );
+		if (rbExportedFunction.GetCheck())
+			lstExports.EnableWindow( fValidDLL );
 		btnRun.EnableWindow( fValidDLL );
 
 

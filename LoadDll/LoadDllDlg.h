@@ -53,7 +53,7 @@ public:
 	BOOL EnumerateExportedFunctions();
 
 	DWORD64 GetFOffsetFromRVA( LPBYTE pBuffer, WORD wNumberOfSections, DWORD64 dwAddr );
-	UINT16 GetArgNumberFromFunction( PBYTE pAddress );
+	UINT16 GetArgNumberFromFunction( PBYTE pAddress, WORD& wNumberOfPseudoPushArguments );
 	BOOL GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE pData, size_t nLength, PBYTE& pArgPtr );
 	BOOL LoadDll();
 	BOOL LoadDllAndExecuteFunction();
@@ -74,4 +74,5 @@ public:
 	BOOL IsValidDLL( const char * lpszFileName );
 	afx_msg void OnBnClickedHelp();
 	CComboBox cbCallingConvention;
+	CButton m_chkPause;
 };
