@@ -95,6 +95,7 @@ BEGIN_MESSAGE_MAP(CLoadDllDlg, CDialogEx)
 	ON_NOTIFY(NM_CLICK, IDC_LIST_EXPORTS, &CLoadDllDlg::OnNMClickListExports)
 	ON_BN_CLICKED(IDC_LOADFILE, &CLoadDllDlg::OnBnClickedLoadfile)
 	ON_BN_CLICKED(IDHELP, &CLoadDllDlg::OnBnClickedHelp)
+	ON_WM_DROPFILES()
 END_MESSAGE_MAP()
 
 
@@ -163,6 +164,8 @@ BOOL CLoadDllDlg::OnInitDialog()
 
 	m_pToolTip->Activate(TRUE);
 
+	// accept drag and drop
+	DragAcceptFiles(TRUE);
 
 	return TRUE;
 }
@@ -1212,6 +1215,41 @@ void CLoadDllDlg::OnNMClickListExports(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
+BOOL CLoadDllDlg::LoadFile(const char* szFileName)
+{
+	BOOL fValidDLL = FALSE;
+
+	//
+	// Lets see if file is a valid DLL
+	//
+	fValidDLL = IsValidDLL( szFileName );
+
+	if ( fValidDLL )
+	{
+		edtDllPath.SetWindowTextA( szFileName );
+		if (  rbExportedFunction.GetCheck() )
+		{
+			OnBnClickedCallExport();
+		}
+		else if ( rbCallEntrypoint.GetCheck() )
+		{
+			OnBnClickedCallEntrypoint();
+		}
+	}
+	else
+	{
+		EnableControls( FALSE );
+	}
+
+	rbExportedFunction.EnableWindow( fValidDLL );
+	rbCallEntrypoint.EnableWindow( fValidDLL );
+	if (rbExportedFunction.GetCheck())
+		lstExports.EnableWindow( fValidDLL );
+	btnRun.EnableWindow( fValidDLL );
+
+	return fValidDLL;
+}
+
 //
 // Show open dialog.
 //
@@ -1219,47 +1257,14 @@ void CLoadDllDlg::OnBnClickedLoadfile()
 {
 	CFileDialog OpenDialog(TRUE, "DLL", "", OFN_FILEMUSTEXIST, 
 		"DLL files (*.dll)|*.dll|All files (*.*)|*.*||", this);
-
 	CString cFileName;
-	BOOL fValidDLL = FALSE;
 
 	OpenDialog.m_pOFN->lpstrTitle = "Select DLL file...";
 	if( OpenDialog.DoModal() == IDOK )
 	{
-		//
-		// Lets see if file is a valid DLL
-		//
 		cFileName = OpenDialog.GetPathName();
-		fValidDLL = IsValidDLL( cFileName.GetString() );
-
-		if ( fValidDLL )
-		{
-			edtDllPath.SetWindowTextA( cFileName.GetString() );
-			if (  rbExportedFunction.GetCheck() )
-			{
-				OnBnClickedCallExport();
-			}
-			else if ( rbCallEntrypoint.GetCheck() )
-			{
-				OnBnClickedCallEntrypoint();
-			}
-		}
-		else
-		{
-			EnableControls( FALSE );
-		}
-
-		rbExportedFunction.EnableWindow( fValidDLL );
-		rbCallEntrypoint.EnableWindow( fValidDLL );
-		if (rbExportedFunction.GetCheck())
-			lstExports.EnableWindow( fValidDLL );
-		btnRun.EnableWindow( fValidDLL );
-
-
-
+		LoadFile(cFileName.GetString());
 	}
-
-
 }
 
 //
@@ -1364,4 +1369,17 @@ BOOL CLoadDllDlg::PreTranslateMessage(MSG* pMsg)
 		m_pToolTip->RelayEvent(pMsg);
 
 	return CDialogEx::PreTranslateMessage(pMsg);
+}
+
+
+void CLoadDllDlg::OnDropFiles(HDROP hDropInfo)
+{
+	char szDroppedFile[MAX_PATH] = { 0 };
+
+	if (DragQueryFileA(hDropInfo, 0, szDroppedFile, MAX_PATH))
+	{
+		LoadFile(szDroppedFile);
+	}
+
+	CDialogEx::OnDropFiles(hDropInfo);
 }

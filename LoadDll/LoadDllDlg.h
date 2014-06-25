@@ -77,9 +77,11 @@ public:
 	afx_msg void OnBnClickedLoadfile();
 
 	BOOL IsValidDLL( const char * lpszFileName );
+	BOOL LoadFile(const char* szFileName);
 	afx_msg void OnBnClickedHelp();
 	CComboBox cbCallingConvention;
 	CButton m_chkPause;
 	CToolTipCtrl* m_pToolTip;
 	virtual BOOL PreTranslateMessage(MSG* pMsg);
+	afx_msg void OnDropFiles(HDROP hDropInfo);
 };
