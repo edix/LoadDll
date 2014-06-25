@@ -100,7 +100,7 @@ END_MESSAGE_MAP()
 
 
 
-#define ORDINAL_STR			"<BY_ORDINAL>"
+#define ORDINAL_STR			L"<BY_ORDINAL>"
 
 //
 // Dialog initialization.
@@ -115,11 +115,11 @@ BOOL CLoadDllDlg::OnInitDialog()
 	//
 	// Set up List View
 	//
-	lstExports.InsertColumn(0, "ID", LVCFMT_LEFT, 100 );
-	lstExports.InsertColumn(1, "Function Name", LVCFMT_LEFT, 200);
-	lstExports.InsertColumn(2, "Ordinal", LVCFMT_LEFT, 100);
-	lstExports.InsertColumn(3, "Arguments", LVCFMT_LEFT, 60);
-	lstExports.InsertColumn(4, "Function type", LVCFMT_LEFT, 200);
+	lstExports.InsertColumn(0, L"ID", LVCFMT_LEFT, 100 );
+	lstExports.InsertColumn(1, L"Function Name", LVCFMT_LEFT, 200);
+	lstExports.InsertColumn(2, L"Ordinal", LVCFMT_LEFT, 100);
+	lstExports.InsertColumn(3, L"Arguments", LVCFMT_LEFT, 60);
+	lstExports.InsertColumn(4, L"Function type", LVCFMT_LEFT, 200);
 	lstExports.SetExtendedStyle(LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_ONECLICKACTIVATE);
 
 	//
@@ -127,18 +127,18 @@ BOOL CLoadDllDlg::OnInitDialog()
 	//
 	rbCallEntrypoint.SetCheck( TRUE );
 	EnableControls( FALSE );
-	cbNumberOfArgs.SelectString( 0, "None" );
-	cbCallingConvention.SelectString( 0, "Stdcall" );
-	cbArgType1.SelectString( 0, "DWORD" );
-	cbArgType2.SelectString( 0, "DWORD" );
-	cbArgType3.SelectString( 0, "DWORD" );
-	cbArgType4.SelectString( 0, "DWORD" );
-	cbArgType5.SelectString( 0, "DWORD" );
-	edtArg1.SetWindowTextA( "0" );
-	edtArg2.SetWindowTextA( "0" );
-	edtArg3.SetWindowTextA( "0" );
-	edtArg4.SetWindowTextA( "0" );
-	edtArg5.SetWindowTextA( "0" );
+	cbNumberOfArgs.SelectString( 0, L"None" );
+	cbCallingConvention.SelectString( 0, L"Stdcall" );
+	cbArgType1.SelectString( 0, L"DWORD" );
+	cbArgType2.SelectString( 0, L"DWORD" );
+	cbArgType3.SelectString( 0, L"DWORD" );
+	cbArgType4.SelectString( 0, L"DWORD" );
+	cbArgType5.SelectString( 0, L"DWORD" );
+	edtArg1.SetWindowText( L"0" );
+	edtArg2.SetWindowText( L"0" );
+	edtArg3.SetWindowText( L"0" );
+	edtArg4.SetWindowText( L"0" );
+	edtArg5.SetWindowText( L"0" );
 
 	//
 	// Align column width
@@ -154,13 +154,13 @@ BOOL CLoadDllDlg::OnInitDialog()
 	}
 
 	m_pToolTip->SetMaxTipWidth(500);
-	m_pToolTip->AddTool(this, "LoadDLL by Esmid Idrizovic");
-	m_pToolTip->AddTool(&m_chkPause,"This will call an INT 3 right before the DLL is loaded or the function executed, so don't worry if it looks like LoadDLL has crashed. You can attach with your debugger to LoadDLL and move on with your analysis.");
-	m_pToolTip->AddTool(&rbCallEntrypoint, "This will load the DLL directly into memory with a custom LoadLibrary function and will execute all TLS entries and then the DllMain.");
-	m_pToolTip->AddTool(&rbExportedFunction, "This will load the DLL using LoadLibrary and will execute the selected function.");
-	m_pToolTip->AddTool(&btnLoadFile, "Select your DLL file...");
-	m_pToolTip->AddTool(&cbCallingConvention, "You must select the right calling convention of the function.\n\nStdcall: function is going to clean up the stack.\nFastcall: ECX+EDX, rest on stack and function is going to clean up.\nCdecl: you have to clean up the stack.\nThiscall: this-pointer is in ECX, function is going to clean up the stack.");
-	m_pToolTip->AddTool(&cbNumberOfArgs, "You can always change the number of the arguments if it's wrong detected by LoadDLL.");
+	m_pToolTip->AddTool(this, L"LoadDLL by Esmid Idrizovic");
+	m_pToolTip->AddTool(&m_chkPause, L"This will call an INT 3 right before the DLL is loaded or the function executed, so don't worry if it looks like LoadDLL has crashed. You can attach with your debugger to LoadDLL and move on with your analysis.");
+	m_pToolTip->AddTool(&rbCallEntrypoint, L"This will load the DLL directly into memory with a custom LoadLibrary function and will execute all TLS entries and then the DllMain.");
+	m_pToolTip->AddTool(&rbExportedFunction, L"This will load the DLL using LoadLibrary and will execute the selected function.");
+	m_pToolTip->AddTool(&btnLoadFile, L"Select your DLL file...");
+	m_pToolTip->AddTool(&cbCallingConvention, L"You must select the right calling convention of the function.\n\nStdcall: function is going to clean up the stack.\nFastcall: ECX+EDX, rest on stack and function is going to clean up.\nCdecl: you have to clean up the stack.\nThiscall: this-pointer is in ECX, function is going to clean up the stack.");
+	m_pToolTip->AddTool(&cbNumberOfArgs, L"You can always change the number of the arguments if it's wrong detected by LoadDLL.");
 
 	m_pToolTip->Activate(TRUE);
 
@@ -224,7 +224,7 @@ void CLoadDllDlg::EnableControls( BOOL fState )
 void CLoadDllDlg::OnBnClickedCallEntrypoint()
 {
 	EnableControls( FALSE );
-	btnRun.SetWindowTextA( "Load DLL" );
+	btnRun.SetWindowText( L"Load DLL" );
 	lstExports.DeleteAllItems();
 }
 
@@ -234,7 +234,7 @@ void CLoadDllDlg::OnBnClickedCallEntrypoint()
 void CLoadDllDlg::OnBnClickedCallExport()
 {
 	EnableControls( TRUE );
-	btnRun.SetWindowTextA( "Execute function" );
+	btnRun.SetWindowText( L"Execute function" );
 	EnumerateExportedFunctions();
 	OnCbnSelchangeCmbNumberofargs();
 }
@@ -323,8 +323,8 @@ DWORD64 CLoadDllDlg::GetFOffsetFromRVA( LPBYTE pBuffer, WORD wNumberOfSections, 
 BOOL CLoadDllDlg::EnumerateExportedFunctions()
 {
 	int nItem = 0;
-	char szFileName[MAX_PATH +1];
-	char szTemp[ 100 ];
+	wchar_t szFileName[MAX_PATH +1];
+	wchar_t szTemp[ 100 ];
 	char * lpszFunctionName = NULL;
 	UINT16 wOrdinal = 0, wNumberOfArgs = 0;
 
@@ -342,9 +342,9 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 	WORD wNumberOfPseudoPushArguments = 0;
 
 	lstExports.DeleteAllItems();
-	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
+	edtDllPath.GetWindowText( szFileName, MAX_PATH );
 
-	hFile = CreateFileA( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+	hFile = CreateFile( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
 	if ( hFile == INVALID_HANDLE_VALUE )
 	{
 		return FALSE;
@@ -435,13 +435,14 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 		//
 		// Add index
 		//
-		wsprintfA( szTemp, "%d", nItem );
+		wsprintf( szTemp, L"%d", nItem );
 		if ( lstExports.InsertItem(LVIF_TEXT, nItem, szTemp, 0, 0, 0, NULL) != (int)-1 )
 		{
 			//
 			// Add function name
 			//
-			lstExports.SetItemText( nItem, 1, lpszFunctionName );
+			wsprintf(szTemp, L"%S", lpszFunctionName);
+			lstExports.SetItemText( nItem, 1, szTemp );
 
 			//
 			// if the function name starts with an @ we assume its a fastcall, so we have to increment the number of arguments to atleast 2 (eax, ecx are used for first two arguments)
@@ -452,13 +453,13 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 			//
 			// Add ordinal
 			//
-			wsprintfA( szTemp, "%d", wOrdinal + pExport->Base );
+			wsprintf( szTemp, L"%d", wOrdinal + pExport->Base );
 			lstExports.SetItemText( nItem, 2, szTemp );
 
 			//
 			// Add number of arguments
 			//
-			wsprintfA( szTemp, "%d", wNumberOfArgs != (UINT16)-1 ? wNumberOfArgs : 0 );
+			wsprintf( szTemp, L"%d", wNumberOfArgs != (UINT16)-1 ? wNumberOfArgs : 0 );
 			lstExports.SetItemText( nItem, 3, szTemp );
 
 			//
@@ -468,25 +469,25 @@ BOOL CLoadDllDlg::EnumerateExportedFunctions()
 			{
 				if (  wNumberOfPseudoPushArguments == 0 )
 				{
-					lstExports.SetItemText(nItem, 4, "Cdecl");
+					lstExports.SetItemText(nItem, 4, L"Cdecl");
 				}
 				else
 				{
-					wsprintf( szTemp, "Cdecl but found %u push/mov argument[n] in the function", wNumberOfPseudoPushArguments );
+					wsprintf( szTemp, L"Cdecl but found %u push/mov argument[n] in the function", wNumberOfPseudoPushArguments );
 					lstExports.SetItemText(nItem, 4, szTemp);
 				}
 			}
 			else if ( lpszFunctionName[0] == '@' )
 			{
-				lstExports.SetItemText(nItem, 4, "Fastcall");
+				lstExports.SetItemText(nItem, 4, L"Fastcall");
 			}
 			else if ( wNumberOfArgs == (UINT16)-1 )
 			{
-				lstExports.SetItemText(nItem, 4, "Exported Variable");
+				lstExports.SetItemText(nItem, 4, L"Exported Variable");
 			}
 			else
 			{
-				lstExports.SetItemText(nItem, 4, "Stdcall");
+				lstExports.SetItemText(nItem, 4, L"Stdcall");
 			}
 			nItem++;
 		}
@@ -509,8 +510,8 @@ lblAbort:
 //
 BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE pData, size_t nLength, PBYTE& pArgPtr )
 {
-	char szTemp[ 0x100 ];
-	size_t nRet;
+	wchar_t szTemp[ 0x100 ] = { 0 };
+	size_t nRet, nBufferSize = nLength;
 
 	//
 	// pControl = Argument
@@ -521,7 +522,7 @@ BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE p
 
 	pArgPtr = NULL;
 
-	nRet = pControl->GetWindowTextA( szTemp, sizeof(szTemp) );
+	nRet = pControl->GetWindowText( szTemp, sizeof(szTemp)/sizeof(szTemp[0]) );
 	if ( nRet == 0 )
 		return FALSE;
 
@@ -546,11 +547,11 @@ BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE p
 			//
 			// Hex
 			//
-			dwValue = strtol( &szTemp[2], (char**)(&szTemp + nLength - 1), 16 );
+			dwValue = wcstol( &szTemp[2], NULL, 16 );
 		}
 		else
 		{
-			dwValue = atol(szTemp);
+			dwValue = _wtol(szTemp);
 		}
 
 		pArgPtr = (PBYTE)dwValue;
@@ -560,18 +561,20 @@ BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE p
 		//
 		// STRING
 		//
-		memcpy( pData, szTemp, nLength );
-		pArgPtr = pData;
+		nLength = WideCharToMultiByte(CP_UTF8, 0, szTemp, (int)nLength, NULL, 0, NULL, NULL);
+
+		if (WideCharToMultiByte(CP_UTF8, 0, szTemp, (int)nLength, (LPSTR)pData, (int)nLength, 0, NULL))
+		{
+			pArgPtr = pData;
+		}
 	}
 	else if ( pComboBox->GetCurSel() == 2 )
 	{
 		//
 		// UNICODE STRING
 		//
-		if ( MultiByteToWideChar(CP_ACP, 0, szTemp, -1, (LPWSTR)pData, (int)nLength) > 0 )
-		{
-			pArgPtr = pData;
-		}
+		memcpy(pData, szTemp, __min(nLength*sizeof(wchar_t), nBufferSize));	// max copy nBufferSize, else buffer overflow yey
+		pArgPtr = pData;
 	}
 	else if ( pComboBox->GetCurSel() == 3 )
 	{
@@ -586,13 +589,13 @@ BOOL CLoadDllDlg::GetArgument( CEdit * pControl, CComboBox * pComboBox, LPBYTE p
 	return TRUE;
 }
 
-BOOL LoadFileInMemory(const char* szFileName, LPBYTE &pBuffer, DWORD &dwSize)
+BOOL LoadFileInMemory(const wchar_t* szFileName, LPBYTE &pBuffer, DWORD &dwSize)
 {
 	HANDLE hFile;
 	DWORD dwBytesRead, dwFileSize;
 	BOOL fResult = FALSE;
 
-	hFile = CreateFileA( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
+	hFile = CreateFile( szFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, 0 );
 	if ( hFile == INVALID_HANDLE_VALUE )
 	{
 		return fResult;
@@ -622,8 +625,8 @@ lblAbort:
 BOOL CLoadDllDlg::LoadDll( )
 {
 	HMEMORYMODULE hDLL;
-	char szError[ 0x100 ] = { 0 };
-	char szFileName[MAX_PATH +1] = { 0 };
+	wchar_t szError[ 0x200 ] = { 0 };
+	wchar_t szFileName[MAX_PATH +1] = { 0 };
 	BOOL fResult = FALSE;
 	LPBYTE pBuffer = NULL;
 	DWORD dwSize = 0;
@@ -631,7 +634,7 @@ BOOL CLoadDllDlg::LoadDll( )
 	//
 	// Load DLL and execute main entry point.
 	//
-	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
+	edtDllPath.GetWindowText( szFileName, MAX_PATH );
 
 	//
 	// do a pause before executed DLL
@@ -644,12 +647,12 @@ BOOL CLoadDllDlg::LoadDll( )
 	hDLL = MemoryLoadLibrary(pBuffer, m_chkPause.GetCheck() ? TRUE : FALSE);
 	if ( hDLL == NULL )
 	{
-		wsprintfA( szError, "Can't load DLL \"%s\". Error = %d\n", szFileName, GetLastError() );
-		this->MessageBox( szError, "Error", MB_ICONERROR );
+		wsprintf( szError, L"Can't load DLL \"%s\". Error = %d\n", szFileName, GetLastError() );
+		this->MessageBox( szError, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
-	this->MessageBox( "DLL loaded. Press OK to unload.", NULL, MB_ICONINFORMATION );
+	this->MessageBox( L"DLL loaded. Press OK to unload.", NULL, MB_ICONINFORMATION );
 
 lblAbort:
 	if ( hDLL != NULL )
@@ -672,9 +675,9 @@ BOOL CLoadDllDlg::LoadDllAndExecuteFunction()
 
 	BOOL fResult = FALSE;
 	HMODULE hDLL = NULL;
-	char szErrorText[ 0x100 ];
-	char szFileName[MAX_PATH +1];
-	char szFunctionName[0x100] = { 0 };
+	wchar_t szErrorText[ 0x100 ];
+	wchar_t szFileName[MAX_PATH +1];
+	wchar_t szFunctionName[0x100] = { 0 };
 
 	BYTE baArg1[ ARG_ALLOC_SIZE ] = { 0 };
 	BYTE baArg2[ ARG_ALLOC_SIZE ] = { 0 };
@@ -687,32 +690,38 @@ BOOL CLoadDllDlg::LoadDllAndExecuteFunction()
 	//
 	// Load DLL
 	//
-	edtDllPath.GetWindowTextA( szFileName, MAX_PATH );
-	hDLL = LoadLibraryA( szFileName );
+	edtDllPath.GetWindowText( szFileName, MAX_PATH );
+	hDLL = LoadLibrary( szFileName );
 	if ( hDLL == NULL )
 	{
-		wsprintfA( szErrorText, "Can't load DLL \"%s\". Error = %d\n", szFileName, GetLastError() );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"Can't load DLL \"%s\". Error = %d\n", szFileName, GetLastError() );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
 	//
 	// Get selected function. If ordinal get ordinal number (decimal).
 	//
-	if ( !GetTextFromListView(szFunctionName, sizeof(szFunctionName), 1) )
+	if ( !GetTextFromListView(szFunctionName, sizeof(szFunctionName)/sizeof(szFunctionName[0]), 1) )
 		goto lblAbort;
 
-	if ( _stricmp(szFunctionName, ORDINAL_STR) == 0 )
+	if ( _wcsicmp(szFunctionName, ORDINAL_STR) == 0 )
 	{
-		if ( !GetTextFromListView(szFunctionName, sizeof(szFunctionName), 2) )
+		if ( !GetTextFromListView(szFunctionName, sizeof(szFunctionName)/sizeof(szFunctionName[0]), 2) )
 			goto lblAbort;
 
-		DWORD dwOrdinal = atol(szFunctionName);
+		DWORD dwOrdinal = _wtol(szFunctionName);
 		pFunction = (PVOID)GetProcAddress( hDLL, (LPCSTR)dwOrdinal );
 	}
 	else
 	{
-		pFunction = (PVOID)GetProcAddress( hDLL, szFunctionName );
+		char szTemp[0x100];
+		int nFunctionLength = WideCharToMultiByte(CP_UTF8, 0, szFunctionName, (int)wcslen(szFunctionName)+1, NULL, 0, NULL, NULL);
+
+		if (WideCharToMultiByte(CP_UTF8, 0, szFunctionName, nFunctionLength, (LPSTR)szTemp, nFunctionLength, 0, NULL))
+		{
+			pFunction = (PVOID)GetProcAddress( hDLL, szTemp );
+		}
 	}
 
 	//
@@ -720,8 +729,8 @@ BOOL CLoadDllDlg::LoadDllAndExecuteFunction()
 	//
 	if ( pFunction == NULL )
 	{
-		wsprintfA( szErrorText, "Can't find exported function \"%s\" in file \"%s\". Error = %d\n", szFunctionName, szFileName, GetLastError() );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"Can't find exported function \"%s\" in file \"%s\". Error = %d\n", szFunctionName, szFileName, GetLastError() );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
@@ -744,8 +753,8 @@ lblAbort:
 	{
 		if ( FreeLibrary(hDLL) == FALSE )
 		{
-			wsprintfA( szErrorText, "Can't unload DLL. Error = %d\n", GetLastError() );
-			this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+			wsprintf( szErrorText, L"Can't unload DLL. Error = %d\n", GetLastError() );
+			this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		}
 		else
 		{
@@ -759,7 +768,7 @@ lblAbort:
 //
 // Reads selected list view item to lpszBuffer.
 //
-BOOL CLoadDllDlg::GetTextFromListView( char * lpszBuffer, int nBufferSize, int nSubItem )
+BOOL CLoadDllDlg::GetTextFromListView( wchar_t * lpszBuffer, int nBufferSize, int nSubItem )
 {
 	LVITEM lvi = { 0 };
 
@@ -1058,17 +1067,17 @@ void CLoadDllDlg::ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PB
 //
 void CLoadDllDlg::ShowExecutedFunctionInformation( int nReturn, BOOL fException )
 {
-	char szText[ 0x100 ] = { 0 };
-	char * lpszFormat = NULL;
+	wchar_t szText[ 0x100 ] = { 0 };
+	wchar_t* lpszFormat = NULL;
 	DWORD dwLastError = GetLastError();
 
 	lpszFormat = fException ? 
-		"Exception occurred. Please check again the arguments (PTR, ...).\n\n"
-		"Return code: %08d (0x%08x)\nLast Error:  %08d (0x%08x)" : 
-	"Return code: %08d (0x%08x)\nLast Error:  %08d (0x%08x)";
+		L"Exception occurred. Please check again the arguments (PTR, ...).\n\n"
+		L"Return code: %08d (0x%08x)\nLast Error:  %08d (0x%08x)" : 
+	L"Return code: %08d (0x%08x)\nLast Error:  %08d (0x%08x)";
 
-	wsprintfA( szText, lpszFormat, nReturn, nReturn, dwLastError, dwLastError );
-	this->MessageBox( szText, fException ? "Exception" : "Function return", fException ? MB_ICONWARNING : MB_ICONINFORMATION );
+	wsprintf( szText, lpszFormat, nReturn, nReturn, dwLastError, dwLastError );
+	this->MessageBox( szText, fException ? L"Exception" : L"Function return", fException ? MB_ICONWARNING : MB_ICONINFORMATION );
 }
 
 //
@@ -1167,38 +1176,38 @@ void CLoadDllDlg::OnNMClickListExports(NMHDR *pNMHDR, LRESULT *pResult)
 
 	if ( pNMItemActivate )
 	{
-		char szArgs[ 20 ];
-		if ( GetTextFromListView( szArgs, sizeof(szArgs), 3 ) )
+		wchar_t szArgs[ 20 ];
+		if ( GetTextFromListView( szArgs, sizeof(szArgs)/sizeof(szArgs[0]), 3 ) )
 		{
-			DWORD dwNum = atol(szArgs);
+			DWORD dwNum = _wtol(szArgs);
 			if ( dwNum > 5 )
-				strcpy_s( szArgs, sizeof(szArgs), "5" );
+				wcscpy_s( szArgs, sizeof(szArgs)/sizeof(szArgs[0]), L"5" );
 
-			if ( _stricmp(szArgs, "0") == 0 )
-				strcpy_s( szArgs, sizeof(szArgs), "None" );
+			if ( _wcsicmp(szArgs, L"0") == 0 )
+				wcscpy_s( szArgs, sizeof(szArgs)/sizeof(szArgs[0]), L"None" );
 
 
 
-			char szType[100];
-			if (GetTextFromListView(szType, sizeof(szType), 4))
+			wchar_t szType[100];
+			if (GetTextFromListView(szType, sizeof(szType)/sizeof(szType[0]), 4))
 			{
-				if (_strnicmp("Stdcall", szType, 7) == 0)
+				if (_wcsnicmp(L"Stdcall", szType, 7) == 0)
 					cbCallingConvention.SetCurSel(0);
-				else if (_strnicmp("Fastcall", szType, 8) == 0)
+				else if (_wcsnicmp(L"Fastcall", szType, 8) == 0)
 					cbCallingConvention.SetCurSel(1);
-				else if (_strnicmp("Cdecl", szType, 5) == 0)
+				else if (_wcsnicmp(L"Cdecl", szType, 5) == 0)
 				{
 					cbCallingConvention.SetCurSel(2);
-					char* szPos = strstr(szType, "Cdecl but found ");
+					wchar_t* szPos = wcsstr(szType, L"Cdecl but found ");
 					if ( szPos)
 					{
-						szPos += strlen("Cdecl but found ");
-						const char* szTemp = strchr(szPos, ' ');
-						memset(szArgs, 0, sizeof(szArgs));
-						strncpy_s(szArgs, szPos, szTemp - szPos);
+						szPos += wcslen(L"Cdecl but found ");
+						const wchar_t* szTemp = wcschr(szPos, ' ');
+						memset(szArgs, 0, sizeof(szArgs)/sizeof(szArgs[0]));
+						wcsncpy_s(szArgs, szPos, szTemp - szPos);
 					}
 				}
-				else if ( _strnicmp("Thiscall", szType, 8) == 0 )
+				else if ( _wcsnicmp(L"Thiscall", szType, 8) == 0 )
 				{
 					cbCallingConvention.SetCurSel(3);
 				}
@@ -1215,7 +1224,7 @@ void CLoadDllDlg::OnNMClickListExports(NMHDR *pNMHDR, LRESULT *pResult)
 	*pResult = 0;
 }
 
-BOOL CLoadDllDlg::LoadFile(const char* szFileName)
+BOOL CLoadDllDlg::LoadFile(const wchar_t* szFileName)
 {
 	BOOL fValidDLL = FALSE;
 
@@ -1226,7 +1235,7 @@ BOOL CLoadDllDlg::LoadFile(const char* szFileName)
 
 	if ( fValidDLL )
 	{
-		edtDllPath.SetWindowTextA( szFileName );
+		edtDllPath.SetWindowText( szFileName );
 		if (  rbExportedFunction.GetCheck() )
 		{
 			OnBnClickedCallExport();
@@ -1255,11 +1264,11 @@ BOOL CLoadDllDlg::LoadFile(const char* szFileName)
 //
 void CLoadDllDlg::OnBnClickedLoadfile()
 {
-	CFileDialog OpenDialog(TRUE, "DLL", "", OFN_FILEMUSTEXIST, 
-		"DLL files (*.dll)|*.dll|All files (*.*)|*.*||", this);
+	CFileDialog OpenDialog(TRUE, L"DLL", L"", OFN_FILEMUSTEXIST, 
+		L"DLL files (*.dll)|*.dll|All files (*.*)|*.*||", this);
 	CString cFileName;
 
-	OpenDialog.m_pOFN->lpstrTitle = "Select DLL file...";
+	OpenDialog.m_pOFN->lpstrTitle = L"Select DLL file...";
 	if( OpenDialog.DoModal() == IDOK )
 	{
 		cFileName = OpenDialog.GetPathName();
@@ -1270,64 +1279,64 @@ void CLoadDllDlg::OnBnClickedLoadfile()
 //
 // Is file a valid DLL (PE in Win32 or PE+ in Win64).
 //
-BOOL CLoadDllDlg::IsValidDLL( const char * lpszFileName )
+BOOL CLoadDllDlg::IsValidDLL( const wchar_t * lpszFileName )
 {
 	HANDLE hFile;
-	char szErrorText[ MAX_PATH + 0x100 ];
+	wchar_t szErrorText[ MAX_PATH + 0x100 ];
 	BYTE baBuffer[ 0x1000 ] = { 0 };
 	DWORD dwBytesRead;
 	IMAGE_DOS_HEADER* pDos = NULL;
 	IMAGE_NT_HEADERS* pNt = NULL;
 	BOOL fResult = FALSE;
 
-	hFile = CreateFileA( lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
+	hFile = CreateFile( lpszFileName, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, 0, NULL );
 	if ( hFile == INVALID_HANDLE_VALUE )
 	{
-		wsprintfA( szErrorText, "Can't find file \"%s\".", lpszFileName );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"Can't find file \"%s\".", lpszFileName );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		return fResult;
 	}
 
 	if ( ReadFile(hFile, &baBuffer, sizeof(baBuffer), &dwBytesRead, NULL) == FALSE )
 	{
-		wsprintfA( szErrorText, "Can't read DLL." );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"Can't read DLL." );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
 	pDos = (IMAGE_DOS_HEADER*)&baBuffer;
 	if ( pDos->e_magic != IMAGE_DOS_SIGNATURE )
 	{
-		wsprintfA( szErrorText, "File is not a valid DLL." );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"File is not a valid DLL." );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
 	pNt = (IMAGE_NT_HEADERS*)((char*)&baBuffer + pDos->e_lfanew);
 	if ( pNt->Signature != IMAGE_NT_SIGNATURE )
 	{
-		wsprintfA( szErrorText, "File is not a valid DLL." );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"File is not a valid DLL." );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 		goto lblAbort;
 	}
 
 #ifdef _WIN64
 	if ( pNt->OptionalHeader.Magic != 0x20b )
 	{
-		wsprintfA( szErrorText, "You must use the x32 version for loading PE files." );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"You must use the x32 version for loading PE files." );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 	}
 #else
 	if ( pNt->OptionalHeader.Magic != 0x10b )
 	{
-		wsprintfA( szErrorText, "You must use the x64 version for loading PE+ files." );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"You must use the x64 version for loading PE+ files." );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 	}
 #endif
 	else if ( !(pNt->FileHeader.Characteristics & IMAGE_FILE_DLL) )
 	{
-		wsprintfA( szErrorText, "PE is not a DLL file" );
-		this->MessageBox( szErrorText, "Error", MB_ICONERROR );
+		wsprintf( szErrorText, L"PE is not a DLL file" );
+		this->MessageBox( szErrorText, L"Error", MB_ICONERROR );
 	}
 	else
 	{
@@ -1347,18 +1356,18 @@ lblAbort:
 //
 void CLoadDllDlg::OnBnClickedHelp()
 {
-	char * szText = "LoadDLL by Esmid Idrizovic, 23. Juni 2014\n\n"
-					"Uses Length Disassembler Engine by BeatriX\n"
-					"Uses MemoryModule by Joachim Bauch\n\n"
-					"Arguments:\n"
-					"DWORD: numeric parameter (start with \"0x\" for hex-numbers)\n"
-					"STR: ASCII string as parameter\n"
-					"STRW: Unicode string as parameter\n"
-					"PTR: Empty memory space (256 bytes)\n\n"
-					"WARNING:\n"
-					"Don't load any suspected DLL on your real system! Use always an virtual machine!\n";
+	wchar_t * szText = L"LoadDLL by Esmid Idrizovic, 23. Juni 2014\n\n"
+					L"Uses Length Disassembler Engine by BeatriX\n"
+					L"Uses MemoryModule by Joachim Bauch\n\n"
+					L"Arguments:\n"
+					L"DWORD: numeric parameter (start with \"0x\" for hex-numbers)\n"
+					L"STR: ASCII string as parameter\n"
+					L"STRW: Unicode string as parameter\n"
+					L"PTR: Empty memory space (256 bytes)\n\n"
+					L"WARNING:\n"
+					L"Don't load any suspected DLL on your real system! Use always an virtual machine!\n";
 
-	this->MessageBox( szText, "Help", MB_ICONINFORMATION );
+	this->MessageBox( szText, L"Help", MB_ICONINFORMATION );
 }
 
 
@@ -1374,9 +1383,9 @@ BOOL CLoadDllDlg::PreTranslateMessage(MSG* pMsg)
 
 void CLoadDllDlg::OnDropFiles(HDROP hDropInfo)
 {
-	char szDroppedFile[MAX_PATH] = { 0 };
+	wchar_t szDroppedFile[MAX_PATH] = { 0 };
 
-	if (DragQueryFileA(hDropInfo, 0, szDroppedFile, MAX_PATH))
+	if (DragQueryFile(hDropInfo, 0, szDroppedFile, MAX_PATH))
 	{
 		LoadFile(szDroppedFile);
 	}

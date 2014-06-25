@@ -64,7 +64,7 @@ public:
 	BOOL LoadDllAndExecuteFunction();
 
 	void ExecuteFunction( PVOID pFunction, PBYTE pArg1, PBYTE pArg2, PBYTE pArg3, PBYTE pArg4, PBYTE pArg5 );
-	BOOL GetTextFromListView( char * lpszBuffer, int nBufferSize, int nSubItem = 1 );
+	BOOL GetTextFromListView( wchar_t * lpszBuffer, int nBufferSize, int nSubItem = 1 );
 	void ShowExecutedFunctionInformation( int nReturn, BOOL fException = FALSE );
 
 	CEdit edtDllPath;
@@ -76,8 +76,8 @@ public:
 	afx_msg void OnNMClickListExports(NMHDR *pNMHDR, LRESULT *pResult);
 	afx_msg void OnBnClickedLoadfile();
 
-	BOOL IsValidDLL( const char * lpszFileName );
-	BOOL LoadFile(const char* szFileName);
+	BOOL IsValidDLL( const wchar_t* lpszFileName );
+	BOOL LoadFile(const wchar_t* szFileName);
 	afx_msg void OnBnClickedHelp();
 	CComboBox cbCallingConvention;
 	CButton m_chkPause;
