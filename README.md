@@ -33,6 +33,10 @@ New screenshot of the GUI. Now you can check the "Pause before loading DLL (debu
 
 Changes
 =======
+25.06.2014:
+	+ added Drag&Drop support
+	+ using Unicode API
+
 23.06.2014:
 	+ added "Pause before loading DLL (debug)"
 	+ added "Function type" to ListView: guess the function type
