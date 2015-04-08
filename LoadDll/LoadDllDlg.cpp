@@ -167,6 +167,16 @@ BOOL CLoadDllDlg::OnInitDialog()
 	// accept drag and drop
 	DragAcceptFiles(TRUE);
 
+	//
+	// load the given argument as a DLL path
+	//
+	LPTSTR lpszCmdLine = AfxGetApp()->m_lpCmdLine;
+	if (lpszCmdLine && *lpszCmdLine)
+	{
+		// DLL given as a start argument
+		LoadFile(lpszCmdLine);
+	}
+
 	return TRUE;
 }
 
